@@ -64,18 +64,9 @@ return function()
 		end)
 
 		it("can decode uint 64 value", function()
-			local zeroValue = msgpack.decode("\xCF\x00\x00\x00\x00\x00\x00\x00\x00")
-			expect(zeroValue._msgpackType).to.equal(msgpack.UInt64)
-			expect(zeroValue.mostSignificantPart).to.equal(0)
-			expect(zeroValue.leastSignificantPart).to.equal(0)
-
-			local maxValue = msgpack.decode("\xCF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
-			expect(maxValue.mostSignificantPart).to.equal(4294967295)
-			expect(maxValue.leastSignificantPart).to.equal(4294967295)
-
-			local midValue = msgpack.decode("\xCF\x00\x00\x00\x00\xFF\xFF\xFF\xFF")
-			expect(midValue.mostSignificantPart).to.equal(0)
-			expect(midValue.leastSignificantPart).to.equal(4294967295)
+			expect(msgpack.decode("\xCF\x00\x00\x00\x00\x00\x00\x00\x00")).to.equal(0)
+			expect(msgpack.decode("\xCF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")).to.equal(18446744073709551615)
+			expect(msgpack.decode("\xCF\x00\x00\x00\x00\xFF\xFF\xFF\xFF")).to.equal(4294967295)
 		end)
 
 		it("can decode int 8 value", function()
@@ -103,18 +94,11 @@ return function()
 		end)
 
 		it("can decode int 64 value", function()
-			local zeroValue = msgpack.decode("\xD3\x00\x00\x00\x00\x00\x00\x00\x00")
-			expect(zeroValue._msgpackType).to.equal(msgpack.Int64)
-			expect(zeroValue.mostSignificantPart).to.equal(0)
-			expect(zeroValue.leastSignificantPart).to.equal(0)
-
-			local maxValue = msgpack.decode("\xD3\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
-			expect(maxValue.mostSignificantPart).to.equal(4294967295)
-			expect(maxValue.leastSignificantPart).to.equal(4294967295)
-
-			local midValue = msgpack.decode("\xD3\x00\x00\x00\x00\xFF\xFF\xFF\xFF")
-			expect(midValue.mostSignificantPart).to.equal(0)
-			expect(midValue.leastSignificantPart).to.equal(4294967295)
+			expect(msgpack.decode("\xD3\x00\x00\x00\x00\x00\x00\x00\x00")).to.equal(0)
+			expect(msgpack.decode("\xD3\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")).to.equal(-1)
+			expect(msgpack.decode("\xD3\x00\x00\x00\x00\xFF\xFF\xFF\xFF")).to.equal(4294967295)
+			expect(msgpack.decode("\xD3\x7F\xFF\xFF\xFF\xFF\xFF\xFF\xFF")).to.equal(9223372036854775807)
+			expect(msgpack.decode("\xD3\x80\x00\x00\x00\x00\x00\x00\x00")).to.equal(-9223372036854775808)
 		end)
 
 		it("can decode float 32 value", function()
@@ -412,6 +396,8 @@ return function()
 			expect(hex(msgpack.encode(65535))).to.equal("CD FF FF")
 			expect(hex(msgpack.encode(65536))).to.equal("CE 00 01 00 00")
 			expect(hex(msgpack.encode(4294967295))).to.equal("CE FF FF FF FF")
+			expect(hex(msgpack.encode(4294967296))).to.equal("CF 00 00 00 01 00 00 00 00")
+			expect(hex(msgpack.encode(184467440737095520))).to.equal("CF 02 8F 5C 28 F5 C2 8F 60")
 		end)
 
 		it("can encode negative integers", function()
@@ -423,6 +409,8 @@ return function()
 			expect(hex(msgpack.encode(-32768))).to.equal("D1 80 00")
 			expect(hex(msgpack.encode(-32769))).to.equal("D2 FF FF 7F FF")
 			expect(hex(msgpack.encode(-2147483648))).to.equal("D2 80 00 00 00")
+			expect(hex(msgpack.encode(-2147483649))).to.equal("D3 FF FF FF FF 7F FF FF FF")
+			expect(hex(msgpack.encode(-92233720368547760))).to.equal("D3 FE B8 51 EB 85 1E B8 50")
 		end)
 
 		it("can encode floating points", function()
@@ -436,21 +424,6 @@ return function()
 			expect(hex(msgpack.encode(-1.7976931348623157e+308))).to.equal("CB FF EF FF FF FF FF FF FF")
 			expect(hex(msgpack.encode(2.2250738585072014e-308))).to.equal("CB 00 10 00 00 00 00 00 00")
 			expect(hex(msgpack.encode(-2.2250738585072014e-308))).to.equal("CB 80 10 00 00 00 00 00 00")
-		end)
-
-		it("can encode Int64 and UInt64 representations", function()
-			expect(hex(msgpack.encode(msgpack.Int64.new(0xFFFFFFFF, 0xFFFFFFFF)))).to.equal(
-				"D3 FF FF FF FF FF FF FF FF"
-			)
-			expect(hex(msgpack.encode(msgpack.Int64.new(0xFAFBFCFD, 0xFEFDFCFB)))).to.equal(
-				"D3 FA FB FC FD FE FD FC FB"
-			)
-			expect(hex(msgpack.encode(msgpack.UInt64.new(0xFFFFFFFF, 0xFFFFFFFF)))).to.equal(
-				"CF FF FF FF FF FF FF FF FF"
-			)
-			expect(hex(msgpack.encode(msgpack.UInt64.new(0xFAFBFCFD, 0xFEFDFCFB)))).to.equal(
-				"CF FA FB FC FD FE FD FC FB"
-			)
 		end)
 
 		it("can encode buffer value", function()
